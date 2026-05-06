@@ -3,27 +3,56 @@ import cv2
 import numpy as np
 from aging import age_effect
 
+st.set_page_config(page_title="AI Face Aging", layout="wide")
+
 st.title("👴 AI Face Aging Simulator")
 
-st.write("Upload an image to see aging effect 👇")
+st.write("Upload an image and simulate realistic aging effects")
 
-uploaded_file = st.file_uploader("Upload an image", type=["jpg","png","jpeg"])
+uploaded_file = st.file_uploader(
+    "Upload Face Image",
+    type=["jpg", "jpeg", "png"]
+)
 
 if uploaded_file is not None:
-    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-    img = cv2.imdecode(file_bytes, 1)
 
-    st.image(img, caption="Original", channels="BGR")
+    file_bytes = np.asarray(
+        bytearray(uploaded_file.read()),
+        dtype=np.uint8
+    )
 
-    age_level = st.slider("Select Age Intensity", 0.0, 1.0, 0.5)
+    image = cv2.imdecode(file_bytes, 1)
 
-    aged = age_effect(img, age_level)
+    age_level = st.slider(
+        "Age Intensity",
+        0.0,
+        1.0,
+        0.6
+    )
 
-    st.image(aged, caption="Aged Output", channels="BGR")
-else:
-    st.warning("Please upload an image to continue")
+    aged = age_effect(image, age_level)
 
-# import streamlit as st
+    col1, col2 = st.columns(2)
 
-# st.title("WORKING TEST")
-# st.write("If you see this, Streamlit is fine")
+    with col1:
+        st.image(
+            image,
+            caption="Original",
+            channels="BGR"
+        )
+
+    with col2:
+        st.image(
+            aged,
+            caption="Aged Output",
+            channels="BGR"
+        )
+
+    success, buffer = cv2.imencode('.png', aged)
+
+    st.download_button(
+        label="Download Aged Image",
+        data=buffer.tobytes(),
+        file_name="aged_face.png",
+        mime="image/png"
+    )
